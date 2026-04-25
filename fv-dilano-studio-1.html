@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FV DILANO Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rubik:wght@400;700;900&family=Poppins:wght@400;600;700&family=Playfair+Display:wght@700;900&family=Rajdhani:wght@600;700&family=Oswald:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060608;--surface:#0d0d14;--card:#12121c;--border:#1e1e2e;--gold:#e8b84b;--gold2:#ffd97d;--red:#e74c3c;--green:#2ecc71;--text:#f0f0f8;--muted:#4a4a6a;--accent:#7c5cbf;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:15px;min-height:100vh;overflow-x:hidden;padding-bottom:30px;}
+header{background:linear-gradient(135deg,#08080f,#0d0d1a);border-bottom:2px solid var(--gold);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:6px;color:var(--gold);text-shadow:0 0 30px rgba(232,184,75,.5);}
+.logo span{color:var(--text);}
+.hinfo{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:right;line-height:1.7;}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;margin-right:4px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+main{padding:10px;display:flex;flex-direction:column;gap:10px;}
+.prev-wrap{background:#000;border-radius:10px;overflow:hidden;border:1px solid var(--border);position:relative;}
+.prev-screen{width:100%;aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+#mainVid{width:100%;height:100%;object-fit:contain;display:none;transition:filter .3s;}
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);}
+.empty-icon{font-size:36px;opacity:.4;}
+.empty p{font-size:11px;letter-spacing:2px;text-align:center;}
+#captionOv{position:absolute;left:50%;transform:translateX(-50%);font-size:22px;color:#fff;text-align:center;padding:6px 14px;border-radius:6px;pointer-events:none;display:none;max-width:95%;word-break:break-word;z-index:10;}
+.prog-bar-wrap{padding:8px 12px;display:flex;align-items:center;gap:8px;background:var(--surface);}
+.play-btn{width:36px;height:36px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .1s;}
+.play-btn:active{transform:scale(.88);}
+.play-btn svg{fill:#000;}
+.time-txt{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);flex-shrink:0;min-width:82px;}
+.prog{flex:1;height:5px;background:var(--border);border-radius:3px;cursor:pointer;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;width:0%;}
+.tl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;overflow-x:auto;scrollbar-width:none;}
+.tl-wrap::-webkit-scrollbar{display:none;}
+.tl-track{display:flex;gap:4px;min-height:38px;align-items:center;}
+.tl-clip{height:34px;min-width:60px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:'Share Tech Mono',monospace;padding:0 6px;cursor:pointer;flex-shrink:0;border:1px solid;}
+.tl-clip.main-clip{background:linear-gradient(135deg,#1a1a30,#14142a);border-color:var(--accent);color:var(--accent);}
+.tl-clip.broll-clip{background:linear-gradient(135deg,#0a1a10,#0f2015);border-color:var(--green);color:var(--green);}
+.tl-clip.cur{border-color:var(--gold)!important;color:var(--gold)!important;}
+.tl-cut{height:34px;width:3px;background:var(--red);border-radius:2px;flex-shrink:0;}
+.tl-empty{color:var(--muted);font-size:11px;letter-spacing:1px;}
+.tabs{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:5px;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:7px 11px;border-radius:5px;border:none;background:transparent;color:var(--muted);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tab.active{background:var(--gold);color:#000;}
+.panel{display:none;flex-direction:column;gap:10px;}
+.panel.active{display:flex;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.sec{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:5px;}
+.upload-box{border:2px dashed var(--border);border-radius:8px;padding:20px 14px;text-align:center;cursor:pointer;position:relative;transition:all .2s;}
+.upload-box:hover{border-color:var(--gold);background:rgba(232,184,75,.04);}
+.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:26px;margin-bottom:6px;}
+.upload-box strong{color:var(--gold);display:block;font-size:14px;margin-bottom:3px;}
+.upload-box p{font-size:12px;color:var(--muted);}
+.clip-row{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:border-color .2s;}
+.clip-row.active{border-color:var(--gold);}
+.clip-badge{font-size:9px;padding:2px 6px;border-radius:10px;font-weight:700;letter-spacing:1px;flex-shrink:0;}
+.badge-main{background:rgba(124,92,191,.2);color:var(--accent);border:1px solid rgba(124,92,191,.3);}
+.badge-broll{background:rgba(46,204,113,.15);color:var(--green);border:1px solid rgba(46,204,113,.3);}
+.clip-name{flex:1;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+.clip-dur{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);}
+.rbtn{padding:4px 7px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:11px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;transition:all .15s;}
+.rbtn:hover{border-color:var(--gold);color:var(--gold);}
+.rbtn.d:hover{border-color:var(--red);color:var(--red);}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between;}
+.fg label span{color:var(--gold);font-family:'Share Tech Mono',monospace;}
+.fg input,.fg select{background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;padding:8px 10px;width:100%;outline:none;transition:border-color .2s;}
+.fg input:focus,.fg select:focus{border-color:var(--gold);}
+.fg select option{background:var(--surface);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);border-radius:2px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);cursor:pointer;border:2px solid #000;box-shadow:0 0 8px rgba(232,184,75,.5);}
+input[type=color]{height:40px;cursor:pointer;border-radius:4px;border:1px solid var(--border);background:var(--surface);padding:2px;}
+.txt-editor{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;min-height:120px;max-height:220px;overflow-y:auto;font-size:14px;line-height:2;cursor:text;}
+.word-span{display:inline;cursor:pointer;border-radius:2px;padding:1px 3px;transition:background .15s;}
+.word-span:hover{background:rgba(232,184,75,.15);}
+.word-span.selected{background:rgba(231,76,60,.35);text-decoration:line-through;}
+.word-span.silence{background:rgba(255,165,0,.2);color:orange;font-style:italic;}
+.word-span.playing{background:rgba(232,184,75,.3);}
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.fbtn{padding:8px 4px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;cursor:pointer;text-align:center;transition:all .2s;text-transform:uppercase;}
+.fbtn .fp{height:20px;border-radius:3px;margin-bottom:4px;}
+.fbtn.active{border-color:var(--gold);background:rgba(232,184,75,.08);color:var(--gold);}
+.cap-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cap-model{border:2px solid var(--border);border-radius:8px;padding:10px;cursor:pointer;transition:all .2s;text-align:center;background:var(--surface);}
+.cap-model.active{border-color:var(--gold);}
+.cap-preview{padding:6px 10px;border-radius:4px;margin-bottom:6px;font-size:13px;}
+.cap-name{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;}
+.font-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.font-btn{padding:10px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;transition:all .2s;text-align:center;font-size:15px;}
+.font-btn.active{border-color:var(--gold);background:rgba(232,184,75,.08);}
+.music-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:9px 11px;display:flex;align-items:center;gap:9px;cursor:pointer;transition:border-color .2s;}
+.music-item.active{border-color:var(--gold);}
+.music-item .mi{font-size:20px;flex-shrink:0;}
+.music-item .mn{font-weight:700;font-size:13px;}
+.music-item .ms{font-size:10px;color:var(--muted);}
+.zgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.zbtn{padding:10px 4px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;cursor:pointer;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.zbtn:active{border-color:var(--gold);color:var(--gold);background:rgba(232,184,75,.08);transform:scale(.95);}
+.egrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.eopt{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;}
+.eopt.active{border-color:var(--gold);background:rgba(232,184,75,.06);}
+.eopt .ei{font-size:22px;margin-bottom:5px;}
+.eopt .en{font-weight:700;font-size:13px;}
+.eopt .es{font-size:10px;color:var(--muted);}
+.btn{width:100%;padding:13px;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:3px;cursor:pointer;transition:transform .1s,opacity .2s;}
+.btn:active{transform:scale(.97);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--card);border:1px solid var(--gold);border-radius:8px;padding:10px 18px;font-weight:700;font-size:13px;z-index:999;transition:transform .3s;white-space:nowrap;max-width:92vw;text-align:center;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:center;justify-content:center;}
+#modal.show{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:22px;width:90%;max-width:320px;text-align:center;}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--gold);margin-bottom:10px;}
+.modal-bar{height:7px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:8px;}
+.modal-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:4px;width:0%;transition:width .3s;}
+.modal-msg{font-size:12px;color:var(--muted);}
+.txt-prev-screen{background:#000;border-radius:6px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#txtPrevEl{text-align:center;padding:10px;pointer-events:none;}
+@keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes slideUp{0%{opacity:0;transform:translate(-50%,20px)}100%{opacity:1;transform:translate(-50%,0)}}
+@keyframes slideDown{0%{opacity:0;transform:translate(-50%,-20px)}100%{opacity:1;transform:translate(-50%,0)}}
+@keyframes zoomIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes bounceIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}50%{transform:translate(-50%,-50%) scale(1.05)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">FV <span>DILANO</span></div>
+  <div class="hinfo"><span class="dot"></span>STUDIO v3<br><span id="clipCount">0 CLIP</span></div>
+</header>
+<main>
+
+<!-- PREVIEW -->
+<div class="prev-wrap">
+  <div class="prev-screen" id="screen">
+    <video id="mainVid" playsinline></video>
+    <div id="captionOv"></div>
+    <div class="empty" id="emptyScreen">
+      <div class="empty-icon">🎬</div>
+      <p>IMPORTE UNE VIDÉO<br>POUR COMMENCER</p>
+    </div>
+  </div>
+  <div class="prog-bar-wrap">
+    <button class="play-btn" onclick="togglePlay()"><svg id="playIco" width="13" height="13" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+    <span class="time-txt" id="timeDisp">0:00 / 0:00</span>
+    <div class="prog" onclick="seekVid(event)"><div class="prog-fill" id="progFill"></div></div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div class="tl-wrap"><div class="tl-track" id="tlTrack"><span class="tl-empty">— TIMELINE VIDE —</span></div></div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="goTab('import',this)">📁 Import</button>
+  <button class="tab" onclick="goTab('edit',this)">✂️ Édition</button>
+  <button class="tab" onclick="goTab('captions',this)">💬 Légendes</button>
+  <button class="tab" onclick="goTab('text',this)">🖊️ Texte</button>
+  <button class="tab" onclick="goTab('filters',this)">🎨 Filtres</button>
+  <button class="tab" onclick="goTab('zoom',this)">🔍 Zoom</button>
+  <button class="tab" onclick="goTab('audio',this)">🔊 Audio</button>
+  <button class="tab" onclick="goTab('export',this)">📤 Export</button>
+</div>
+
+<!-- IMPORT -->
+<div class="panel active" id="panel-import">
+  <div class="card">
+    <div class="sec">VIDÉO PRINCIPALE</div>
+    <div class="upload-box"><input type="file" accept="video/*" onchange="addClip(this.files,'main')"><div class="upload-icon">🎬</div><strong>IMPORTER MA VIDÉO</strong><p>MP4 · MOV · AVI · WEBM</p></div>
+  </div>
+  <div class="card">
+    <div class="sec">B-ROLL</div>
+    <div class="upload-box" style="border-color:rgba(46,204,113,.3);"><input type="file" accept="video/*" multiple onchange="addClip(this.files,'broll')"><div class="upload-icon">🎥</div><strong style="color:var(--green);">IMPORTER B-ROLL</strong><p>Vidéos d'appui depuis ton téléphone</p></div>
+  </div>
+  <div class="card"><div class="sec">MES CLIPS</div><div id="clipList"><p style="color:var(--muted);font-size:12px;text-align:center;">Aucun clip importé</p></div></div>
+</div>
+
+<!-- EDITION -->
+<div class="panel" id="panel-edit">
+  <div class="card">
+    <div class="sec">ÉDITION PAR TEXTE</div>
+    <p style="font-size:12px;color:var(--muted);line-height:1.6;">Transcris ta vidéo puis <strong style="color:var(--gold);">appuie sur les mots</strong> à supprimer. La vidéo se coupe automatiquement.</p>
+    <button class="btn btn-gold" onclick="startTranscription()">🎤 TRANSCRIRE LA VIDÉO</button>
+    <div class="g2">
+      <button class="btn btn-outline" onclick="deleteSilences()">🔇 SILENCES</button>
+      <button class="btn btn-outline" onclick="clearCuts()">🔄 RESET</button>
+    </div>
+  </div>
+  <div class="card" id="editorCard" style="display:none;">
+    <div class="sec">TRANSCRIPTION</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Appuie sur les mots à couper · <span style="color:orange;">Orange</span> = silence</div>
+    <div class="txt-editor" id="txtEditor"></div>
+    <div style="font-size:11px;color:var(--muted);display:flex;gap:10px;">
+      <span>🔴 Sélectionné = coupé</span>
+      <span>🟡 = en lecture</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec">TRIM MANUEL</div>
+    <div id="trimMsg" style="color:var(--muted);font-size:12px;">Sélectionne un clip d'abord.</div>
+    <div id="trimUI" style="display:none;flex-direction:column;gap:8px;">
+      <div class="g2">
+        <div class="fg"><label>DÉBUT (s)</label><input type="number" id="tStart" value="0" min="0" step="0.1" oninput="doTrim()"></div>
+        <div class="fg"><label>FIN (s)</label><input type="number" id="tEnd" value="0" min="0" step="0.1" oninput="doTrim()"></div>
+      </div>
+      <button class="btn btn-gold" onclick="applyTrim()">APPLIQUER LE TRIM</button>
+    </div>
+  </div>
+</div>
+
+<!-- LÉGENDES -->
+<div class="panel" id="panel-captions">
+  <div class="card">
+    <div class="sec">MODÈLES TENDANCE</div>
+    <div class="cap-grid">
+      <div class="cap-model active" onclick="selCapModel(this,'classic')"><div class="cap-preview" style="background:rgba(0,0,0,.8);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;">DEVIENS FORT</div><div class="cap-name">CLASSIC</div></div>
+      <div class="cap-model" onclick="selCapModel(this,'fire')"><div class="cap-preview" style="background:linear-gradient(135deg,#c0392b,#e67e22);color:#fff;font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;">DEVIENS FORT</div><div class="cap-name">🔥 FIRE</div></div>
+      <div class="cap-model" onclick="selCapModel(this,'gold')"><div class="cap-preview" style="background:#000;color:#e8b84b;font-family:'Playfair Display',serif;font-size:13px;font-weight:700;font-style:italic;">Deviens Fort</div><div class="cap-name">✨ OR ÉLÉGANT</div></div>
+      <div class="cap-model" onclick="selCapModel(this,'neon')"><div class="cap-preview" style="background:#0a0018;color:#b44fff;font-family:'Rubik',sans-serif;font-size:13px;font-weight:900;text-shadow:0 0 10px #b44fff;">DEVIENS FORT</div><div class="cap-name">⚡ NÉON</div></div>
+      <div class="cap-model" onclick="selCapModel(this,'bold')"><div class="cap-preview" style="background:rgba(0,0,0,.7);color:#fff;font-family:'Rubik',sans-serif;font-size:17px;font-weight:900;">DEVIENS FORT</div><div class="cap-name">💪 BOLD VIRAL</div></div>
+      <div class="cap-model" onclick="selCapModel(this,'cinema')"><div class="cap-preview" style="background:rgba(0,0,0,.9);color:#f0e68c;font-family:'Playfair Display',serif;font-size:12px;border-top:1px solid #f0e68c;border-bottom:1px solid #f0e68c;padding:4px;">Deviens Fort</div><div class="cap-name">🎬 CINÉMA</div></div>
+      <div class="cap-model" onclick="selCapModel(this,'highlight')"><div class="cap-preview" style="background:transparent;color:#fff;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;"><span style="background:var(--gold);color:#000;padding:2px 6px;border-radius:3px;">DEVIENS</span> FORT</div><div class="cap-name">🟡 HIGHLIGHT</div></div>
+      <div class="cap-model" onclick="selCapModel(this,'minimal')"><div class="cap-preview" style="background:transparent;color:#fff;font-family:'Poppins',sans-serif;font-size:12px;letter-spacing:3px;border-bottom:1px solid #fff;">DEVIENS FORT</div><div class="cap-name">◻ MINIMAL</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec">OPTIONS</div>
+    <div class="g2">
+      <div class="fg"><label>TAILLE</label><select id="capSize" onchange="updCapStyle()"><option value="16px">PETITE</option><option value="20px" selected>NORMALE</option><option value="26px">GRANDE</option><option value="32px">ÉNORME</option></select></div>
+      <div class="fg"><label>POSITION</label><select id="capPos" onchange="updCapStyle()"><option value="bottom">BAS</option><option value="center">CENTRE</option><option value="top">HAUT</option></select></div>
+    </div>
+    <button class="btn btn-gold" onclick="generateCaptions()">💬 GÉNÉRER LES LÉGENDES</button>
+  </div>
+</div>
+
+<!-- TEXTE -->
+<div class="panel" id="panel-text">
+  <div class="card">
+    <div class="sec">AJOUTER DU TEXTE</div>
+    <div class="txt-prev-screen"><div id="txtPrevEl" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;text-shadow:2px 2px 0 #000;letter-spacing:3px;">DEVIENS DANGEREUX</div></div>
+    <div class="fg"><label>TEXTE</label><input type="text" id="txtContent" value="DEVIENS DANGEREUX" oninput="prevText()"></div>
+    <div class="sec">POLICE</div>
+    <div class="font-grid">
+      <button class="font-btn active" onclick="setFont('Bebas Neue',this)" style="font-family:'Bebas Neue';font-size:18px;letter-spacing:2px;">Bebas Neue</button>
+      <button class="font-btn" onclick="setFont('Rubik',this)" style="font-family:'Rubik';font-weight:900;">Rubik Black</button>
+      <button class="font-btn" onclick="setFont('Poppins',this)" style="font-family:'Poppins';font-weight:700;">Poppins</button>
+      <button class="font-btn" onclick="setFont('Playfair Display',this)" style="font-family:'Playfair Display';font-style:italic;">Playfair</button>
+      <button class="font-btn" onclick="setFont('Oswald',this)" style="font-family:'Oswald';font-weight:700;letter-spacing:2px;">OSWALD</button>
+      <button class="font-btn" onclick="setFont('Share Tech Mono',this)" style="font-family:'Share Tech Mono';font-size:13px;">TechMono</button>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>TAILLE</label><select id="txtSize" onchange="prevText()"><option value="20px">PETITE</option><option value="32px" selected>NORMALE</option><option value="48px">GRANDE</option><option value="70px">ÉNORME</option></select></div>
+      <div class="fg"><label>POSITION</label><select id="txtPos" onchange="prevText()"><option value="bottom">BAS</option><option value="center">CENTRE</option><option value="top">HAUT</option></select></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>COULEUR</label><input type="color" id="txtColor" value="#ffffff" oninput="prevText()"></div>
+      <div class="fg"><label>ANIMATION</label><select id="txtAnim"><option value="none">AUCUNE</option><option value="fadeIn">FONDU</option><option value="slideUp">SLIDE HAUT</option><option value="slideDown">SLIDE BAS</option><option value="zoomIn">ZOOM</option><option value="bounceIn">BOUNCE</option></select></div>
+    </div>
+    <div class="fg"><label>OMBRE / EFFET</label><select id="txtShadow" onchange="prevText()"><option value="2px 2px 0 #000,-2px 2px 0 #000">OMBRE NOIRE</option><option value="2px 2px 0 #e8b84b">OMBRE OR</option><option value="2px 2px 0 #e74c3c">OMBRE ROUGE</option><option value="0 0 20px currentColor">GLOW NÉON</option><option value="none">AUCUNE</option></select></div>
+    <div class="g2">
+      <div class="fg"><label>DÉBUT (s)</label><input type="number" id="txtStart" value="0" min="0" step="0.5"></div>
+      <div class="fg"><label>FIN (s)</label><input type="number" id="txtEnd" value="5" min="0" step="0.5"></div>
+    </div>
+    <button class="btn btn-gold" onclick="addText()">➕ AJOUTER</button>
+  </div>
+  <div class="card"><div class="sec">TEXTES AJOUTÉS</div><div id="txtList" style="color:var(--muted);font-size:12px;">Aucun texte.</div></div>
+</div>
+
+<!-- FILTRES -->
+<div class="panel" id="panel-filters">
+  <div class="card">
+    <div class="sec">FILTRE</div>
+    <div class="fgrid">
+      <button class="fbtn active" onclick="setFilter('none',this)"><div class="fp" style="background:linear-gradient(135deg,#333,#555)"></div>AUCUN</button>
+      <button class="fbtn" onclick="setFilter('foretnoire',this)"><div class="fp" style="background:linear-gradient(135deg,#050f05,#0f1f0f)"></div>🌲 FORÊT</button>
+      <button class="fbtn" onclick="setFilter('cinema',this)"><div class="fp" style="background:linear-gradient(135deg,#1a0f04,#2a200a)"></div>🎞️ CINÉ</button>
+      <button class="fbtn" onclick="setFilter('neon',this)"><div class="fp" style="background:linear-gradient(135deg,#080018,#180030)"></div>⚡ NÉON</button>
+      <button class="fbtn" onclick="setFilter('bw',this)"><div class="fp" style="background:linear-gradient(135deg,#111,#ccc)"></div>⬜ N&B</button>
+      <button class="fbtn" onclick="setFilter('vintage',this)"><div class="fp" style="background:linear-gradient(135deg,#2a1508,#5a3518)"></div>📷 VINTAGE</button>
+      <button class="fbtn" onclick="setFilter('dramatic',this)"><div class="fp" style="background:linear-gradient(135deg,#1a0000,#400010)"></div>🔴 DRAMA</button>
+      <button class="fbtn" onclick="setFilter('cold',this)"><div class="fp" style="background:linear-gradient(135deg,#00101a,#002030)"></div>❄️ FROID</button>
+      <button class="fbtn" onclick="setFilter('warm',this)"><div class="fp" style="background:linear-gradient(135deg,#2a1000,#6a3010)"></div>🔥 CHAUD</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec">AJUSTEMENTS</div>
+    <div class="fg"><label>LUMINOSITÉ <span id="brightVal">100%</span></label><input type="range" id="brightSlider" min="0" max="200" value="100" oninput="updAdj()"></div>
+    <div class="fg"><label>CONTRASTE <span id="contrastVal">100%</span></label><input type="range" id="contrastSlider" min="0" max="300" value="100" oninput="updAdj()"></div>
+    <div class="fg"><label>SATURATION <span id="satVal">100%</span></label><input type="range" id="satSlider" min="0" max="300" value="100" oninput="updAdj()"></div>
+    <div class="fg"><label>VIGNETTE <span id="vigVal">0%</span></label><input type="range" id="vigSlider" min="0" max="100" value="0" oninput="updAdj()"></div>
+    <button class="btn btn-outline" onclick="resetAdj()">🔄 RÉINITIALISER</button>
+  </div>
+</div>
+
+<!-- ZOOM -->
+<div class="panel" id="panel-zoom">
+  <div class="card">
+    <div class="sec">ZOOM</div>
+    <div class="fg"><label>NIVEAU <span id="zoomVal">100%</span></label><input type="range" id="zoomSlider" min="100" max="300" value="100" oninput="setZoom(this.value)"></div>
+    <div class="sec">DÉPLACEMENT</div>
+    <div class="zgrid">
+      <button class="zbtn" onclick="pan(0,-15)"><span>⬆️</span>HAUT</button>
+      <button class="zbtn" onclick="pan(-15,0)"><span>⬅️</span>GAUCHE</button>
+      <button class="zbtn" onclick="pan(15,0)"><span>➡️</span>DROITE</button>
+      <button class="zbtn" onclick="pan(0,15)"><span>⬇️</span>BAS</button>
+      <button class="zbtn" onclick="resetZoom()"><span>🔄</span>RESET</button>
+      <button class="zbtn" onclick="autoZoom()"><span>🎯</span>AUTO</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIO -->
+<div class="panel" id="panel-audio">
+  <div class="card">
+    <div class="sec">VOLUME VIDÉO</div>
+    <div class="fg"><label>VOLUME <span id="volVal">100%</span></label><input type="range" id="volSlider" min="0" max="200" value="100" oninput="setVol(this.value)"></div>
+    <div class="fg"><label>RÉDUCTION BRUIT <span id="noiseVal">0%</span></label><input type="range" id="noiseSlider" min="0" max="100" value="0" oninput="setNoise(this.value)"></div>
+  </div>
+  <div class="card">
+    <div class="sec">MUSIQUES LIBRES DE DROITS</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="music-item" onclick="pickMusic(this,'epic')"><span class="mi">🔥</span><div><div class="mn">MOTIVATION ÉPIQUE</div><div class="ms">Orchestral · Libre de droits</div></div></div>
+      <div class="music-item" onclick="pickMusic(this,'trap')"><span class="mi">⚡</span><div><div class="mn">TRAP DARK</div><div class="ms">Hip-Hop · Libre de droits</div></div></div>
+      <div class="music-item" onclick="pickMusic(this,'ambient')"><span class="mi">🌊</span><div><div class="mn">AMBIENT FOCUS</div><div class="ms">Électronique · Libre de droits</div></div></div>
+      <div class="music-item" onclick="pickMusic(this,'lofi')"><span class="mi">🎵</span><div><div class="mn">LO-FI CHILL</div><div class="ms">Lo-fi · Libre de droits</div></div></div>
+      <div class="music-item" style="position:relative;"><span class="mi">📁</span><div><div class="mn">MA MUSIQUE</div><div class="ms">Import depuis téléphone</div></div><input type="file" accept="audio/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;" onchange="loadMyMusic(this)"></div>
+    </div>
+    <div class="fg"><label>VOLUME MUSIQUE <span id="mvolVal">60%</span></label><input type="range" id="mvolSlider" min="0" max="100" value="60" oninput="setMVol(this.value)"></div>
+    <a href="https://pixabay.com/music/" target="_blank" class="btn btn-outline" style="display:block;text-align:center;text-decoration:none;padding:10px;margin-top:4px;">🌐 PIXABAY MUSIC (GRATUIT)</a>
+  </div>
+</div>
+
+<!-- EXPORT -->
+<div class="panel" id="panel-export">
+  <div class="card">
+    <div class="sec">FORMAT</div>
+    <div class="egrid">
+      <div class="eopt active" onclick="setExport('fb',this)"><div class="ei">📘</div><div class="en">FACEBOOK</div><div class="es">16:9 · 1080p</div></div>
+      <div class="eopt" onclick="setExport('yt',this)"><div class="ei">▶️</div><div class="en">YOUTUBE</div><div class="es">16:9 · 1080p</div></div>
+      <div class="eopt" onclick="setExport('short',this)"><div class="ei">📱</div><div class="en">YT SHORT</div><div class="es">9:16 · 1080p</div></div>
+      <div class="eopt" onclick="setExport('reel',this)"><div class="ei">🎬</div><div class="en">FB REEL</div><div class="es">9:16 · 1080p</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec">RÉSUMÉ</div>
+    <div style="display:flex;flex-direction:column;gap:5px;font-size:13px;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted)">Clips</span><span id="ex-clips">0</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted)">Filtre</span><span id="ex-filter">Aucun</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted)">Légendes</span><span id="ex-caps">0</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted)">Textes</span><span id="ex-texts">0</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted)">Coupures</span><span id="ex-cuts">0</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted)">Format</span><span id="ex-fmt">FACEBOOK</span></div>
+    </div>
+  </div>
+  <button class="btn btn-gold" onclick="doExport()">⬇️ EXPORTER LE PROJET</button>
+  <button class="btn btn-outline" onclick="saveProject()" style="margin-top:4px;">💾 SAUVEGARDER</button>
+</div>
+
+</main>
+<div id="toast">✅</div>
+<div id="modal"><div class="modal-box"><div class="modal-title" id="modalTitle">TRAITEMENT...</div><div class="modal-bar"><div class="modal-fill" id="modalFill"></div></div><div class="modal-msg" id="modalMsg">Patientez</div></div></div>
+
+<script>
+let clips=[],curIdx=-1,textLayers=[],captions=[],cuts=[],words=[];
+let curFilter='none',zoom=100,px=0,py=0,bright=100,contrast=100,sat=100,vig=0;
+let selectedMusic=null,exportFmt='fb',bgAudio=null,isPlaying=false;
+let capModel='classic',curFont="'Bebas Neue',sans-serif";
+
+const vid=document.getElementById('mainVid');
+const capOv=document.getElementById('captionOv');
+const screen=document.getElementById('screen');
+
+vid.addEventListener('timeupdate',()=>{
+  const p=vid.duration?(vid.currentTime/vid.duration*100):0;
+  document.getElementById('progFill').style.width=p+'%';
+  document.getElementById('timeDisp').textContent=ft(vid.currentTime)+' / '+ft(vid.duration||0);
+  renderCapFrame();renderTextFrame();highlightWord();
+});
+vid.addEventListener('ended',()=>{isPlaying=false;updPlayIco();if(bgAudio)bgAudio.pause();});
+
+function ft(s){if(!s||isNaN(s))return'0:00';const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
+function togglePlay(){if(!vid.src){toast('⚠️ Aucune vidéo');return;}if(vid.paused){vid.play();if(bgAudio){bgAudio.currentTime=0;bgAudio.play();}isPlaying=true;}else{vid.pause();if(bgAudio)bgAudio.pause();isPlaying=false;}updPlayIco();}
+function updPlayIco(){document.getElementById('playIco').innerHTML=isPlaying?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>':'<polygon points="5 3 19 12 5 21 5 3"/>';}
+function seekVid(e){if(!vid.duration)return;const r=e.currentTarget.getBoundingClientRect();vid.currentTime=(e.clientX-r.left)/r.width*vid.duration;}
+
+function addClip(files,type){
+  Array.from(files).forEach(f=>{if(!f.type.startsWith('video/'))return;clips.push({name:f.name,url:URL.createObjectURL(f),file:f,type,trimStart:0,trimEnd:null});});
+  renderClips();if(clips.length===1)loadClip(0);updateSummary();toast('✅ '+files.length+' clip(s) importé(s)');
+}
+
+function renderClips(){
+  const el=document.getElementById('clipList');
+  if(!clips.length){el.innerHTML='<p style="color:var(--muted);font-size:12px;text-align:center;">Aucun clip importé</p>';renderTL();document.getElementById('clipCount').textContent='0 CLIP';return;}
+  el.innerHTML=clips.map((c,i)=>`<div class="clip-row ${i===curIdx?'active':''}" onclick="loadClip(${i})"><span class="clip-badge ${c.type==='main'?'badge-main':'badge-broll'}">${c.type==='main'?'MAIN':'B-ROLL'}</span><span class="clip-name">${c.name}</span><span class="clip-dur" id="cd${i}">—</span><button class="rbtn" onclick="event.stopPropagation();mv(${i},-1)">↑</button><button class="rbtn" onclick="event.stopPropagation();mv(${i},1)">↓</button><button class="rbtn d" onclick="event.stopPropagation();rmClip(${i})">✕</button></div>`).join('');
+  document.getElementById('clipCount').textContent=clips.length+' CLIP'+(clips.length>1?'S':'');
+  renderTL();
+}
+
+function loadClip(i){
+  curIdx=i;const c=clips[i];
+  vid.src=c.url;vid.style.display='block';document.getElementById('emptyScreen').style.display='none';
+  vid.onloadedmetadata=()=>{document.getElementById('cd'+i).textContent=ft(vid.duration);if(!c.trimEnd)c.trimEnd=vid.duration;refreshTrimUI();vid.currentTime=c.trimStart||0;};
+  applyFilter();applyZoom();renderClips();updateSummary();
+}
+
+function mv(i,d){const j=i+d;if(j<0||j>=clips.length)return;[clips[i],clips[j]]=[clips[j],clips[i]];if(curIdx===i)curIdx=j;else if(curIdx===j)curIdx=i;renderClips();}
+function rmClip(i){clips.splice(i,1);if(curIdx>=clips.length)curIdx=clips.length-1;if(!clips.length){vid.src='';vid.style.display='none';document.getElementById('emptyScreen').style.display='flex';curIdx=-1;}else loadClip(Math.max(0,curIdx));renderClips();updateSummary();toast('🗑️ Supprimé');}
+
+function renderTL(){
+  const t=document.getElementById('tlTrack');
+  if(!clips.length){t.innerHTML='<span class="tl-empty">— TIMELINE VIDE —</span>';return;}
+  let html='';
+  clips.forEach((c,i)=>{html+=`<div class="tl-clip ${c.type==='main'?'main-clip':'broll-clip'} ${i===curIdx?'cur':''}" onclick="loadClip(${i})">${c.name.replace(/\.[^.]+$/,'').substring(0,8)}</div>`;cuts.filter(cu=>cu.clipIdx===i).forEach(()=>{html+='<div class="tl-cut"></div>';});});
+  t.innerHTML=html;
+}
+
+function refreshTrimUI(){
+  if(curIdx<0){document.getElementById('trimMsg').style.display='block';document.getElementById('trimUI').style.display='none';return;}
+  document.getElementById('trimMsg').style.display='none';document.getElementById('trimUI').style.display='flex';
+  const c=clips[curIdx];document.getElementById('tStart').value=(c.trimStart||0).toFixed(1);document.getElementById('tEnd').value=(c.trimEnd||0).toFixed(1);
+}
+function doTrim(){if(curIdx<0)return;clips[curIdx].trimStart=parseFloat(document.getElementById('tStart').value)||0;clips[curIdx].trimEnd=parseFloat(document.getElementById('tEnd').value)||0;}
+function applyTrim(){if(curIdx<0){toast('⚠️ Aucun clip');return;}vid.currentTime=clips[curIdx].trimStart;toast('✂️ Trim appliqué');}
+
+function startTranscription(){
+  if(curIdx<0){toast('⚠️ Charge une vidéo d\'abord');return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  showModal('TRANSCRIPTION...','Analyse en cours...',0);
+  if(!SR){generateDemoTranscript();return;}
+  const rec=new SR();rec.lang='fr-FR';rec.continuous=true;rec.interimResults=false;
+  words=[];let t=0;
+  rec.onresult=(e)=>{for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal){const txt=e.results[i][0].transcript.trim();txt.split(' ').forEach(w=>{if(w)words.push({word:w,start:t,end:t+0.5,deleted:false,isSilence:false});t+=0.5;});}}updateModal(50,'Transcription...');};
+  rec.onerror=()=>generateDemoTranscript();
+  rec.onend=()=>{vid.pause();if(words.length>0){renderEditor();hideModal();}else generateDemoTranscript();};
+  vid.currentTime=0;vid.play();rec.start();
+  setTimeout(()=>{rec.stop();vid.pause();},Math.min((vid.duration||10)*1000,25000));
+}
+
+function generateDemoTranscript(){
+  const dur=vid.duration||10;
+  const sample=['Si','tu','veux','changer','ta','vie','{s}','commence','par','ta','mentalité','{s}','La','discipline','{s}','bat','le','talent','{s}','Chaque','jour','{s}','de','devenir','meilleur','{s}','Ne','lâche','jamais','{s}','La','douleur','est','temporaire'];
+  words=[];let t=0;const step=dur/sample.length;
+  sample.forEach(w=>{if(w==='{s}'){words.push({word:'[SILENCE]',start:t,end:t+step,deleted:false,isSilence:true});}else{words.push({word:w,start:t,end:t+step,deleted:false,isSilence:false});}t+=step;});
+  renderEditor();hideModal();toast('💬 Transcription générée');
+}
+
+function renderEditor(){
+  document.getElementById('editorCard').style.display='flex';
+  document.getElementById('txtEditor').innerHTML=words.map((w,i)=>`<span class="word-span ${w.isSilence?'silence':''} ${w.deleted?'selected':''}" data-idx="${i}" onclick="toggleWord(${i})">${w.word} </span>`).join('');
+}
+
+function toggleWord(i){
+  words[i].deleted=!words[i].deleted;
+  const span=document.querySelector(`[data-idx="${i}"]`);
+  span.classList.toggle('selected');
+  if(words[i].deleted){cuts.push({clipIdx:curIdx,start:words[i].start,end:words[i].end});}
+  else{cuts=cuts.filter(c=>!(c.clipIdx===curIdx&&c.start===words[i].start));}
+  renderTL();updateSummary();
+}
+
+function deleteSilences(){
+  if(!words.length){toast('⚠️ Transcris d\'abord');return;}
+  let n=0;words.forEach((w,i)=>{if(w.isSilence&&!w.deleted){w.deleted=true;cuts.push({clipIdx:curIdx,start:w.start,end:w.end});n++;}});
+  renderEditor();renderTL();updateSummary();toast('🔇 '+n+' silence(s) supprimé(s)');
+}
+
+function clearCuts(){cuts=[];words.forEach(w=>w.deleted=false);renderEditor();renderTL();updateSummary();toast('🔄 Coupures réinitialisées');}
+
+function highlightWord(){
+  if(!words.length)return;
+  const t=vid.currentTime;
+  document.querySelectorAll('.word-span').forEach(s=>s.classList.remove('playing'));
+  const i=words.findIndex(w=>t>=w.start&&t<=w.end);
+  if(i>=0){const s=document.querySelector(`[data-idx="${i}"]`);if(s){s.classList.add('playing');s.scrollIntoView({block:'nearest',behavior:'smooth'});}}
+}
+
+const CAP_STYLES={
+  classic:{bg:'rgba(0,0,0,.8)',color:'#fff',font:"'Bebas Neue',sans-serif",shadow:'2px 2px 0 #000'},
+  fire:{bg:'linear-gradient(135deg,#c0392b,#e67e22)',color:'#fff',font:"'Oswald',sans-serif",shadow:'none'},
+  gold:{bg:'#000',color:'#e8b84b',font:"'Playfair Display',serif",shadow:'0 0 10px rgba(232,184,75,.5)'},
+  neon:{bg:'#0a0018',color:'#b44fff',font:"'Rubik',sans-serif",shadow:'0 0 15px #b44fff'},
+  bold:{bg:'rgba(0,0,0,.7)',color:'#fff',font:"'Rubik',sans-serif",shadow:'2px 2px 4px rgba(0,0,0,.8)'},
+  cinema:{bg:'rgba(0,0,0,.9)',color:'#f0e68c',font:"'Playfair Display',serif",shadow:'none'},
+  highlight:{bg:'transparent',color:'#fff',font:"'Poppins',sans-serif",shadow:'1px 1px 3px rgba(0,0,0,.8)'},
+  minimal:{bg:'transparent',color:'#fff',font:"'Poppins',sans-serif",shadow:'none'}
+};
+
+function selCapModel(el,model){document.querySelectorAll('.cap-model').forEach(m=>m.classList.remove('active'));el.classList.add('active');capModel=model;toast('✅ Modèle : '+model.toUpperCase());}
+function updCapStyle(){applyCapStyleNow();}
+
+function applyCapStyleNow(){
+  const pos=document.getElementById('capPos').value;
+  const size=document.getElementById('capSize').value;
+  const s=CAP_STYLES[capModel]||CAP_STYLES.classic;
+  capOv.style.fontFamily=s.font;capOv.style.fontSize=size;capOv.style.color=s.color;capOv.style.textShadow=s.shadow;capOv.style.background=s.bg;
+  capOv.style.bottom=pos==='bottom'?'12px':'auto';
+  capOv.style.top=pos==='top'?'12px':(pos==='center'?'50%':'auto');
+  capOv.style.transform=pos==='center'?'translate(-50%,-50%)':'translateX(-50%)';
+}
+
+function generateCaptions(){
+  if(!words.length){if(curIdx<0){toast('⚠️ Charge une vidéo d\'abord');return;}generateDemoTranscript();}
+  captions=[];let buf=[],bufStart=0;
+  const activeWords=words.filter(w=>!w.deleted&&!w.isSilence);
+  activeWords.forEach((w,i)=>{if(!buf.length)bufStart=w.start;buf.push(w.word);if(buf.length>=4||i===activeWords.length-1){captions.push({text:buf.join(' '),start:bufStart,end:w.end});buf=[];}});
+  updateSummary();toast('💬 '+captions.length+' légende(s) générées');
+}
+
+function renderCapFrame(){
+  if(!captions.length){capOv.style.display='none';return;}
+  const t=vid.currentTime;
+  const active=captions.find(c=>t>=c.start&&t<=c.end);
+  if(active){capOv.textContent=active.text;capOv.style.display='block';applyCapStyleNow();}
+  else capOv.style.display='none';
+}
+
+function setFont(f,btn){curFont=`'${f}',sans-serif`;document.querySelectorAll('.font-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');prevText();}
+
+function prevText(){
+  const el=document.getElementById('txtPrevEl');
+  el.textContent=document.getElementById('txtContent').value||'TON TEXTE';
+  el.style.fontFamily=curFont;
+  el.style.fontSize=document.getElementById('txtSize').value;
+  el.style.color=document.getElementById('txtColor').value;
+  el.style.textShadow=document.getElementById('txtShadow').value;
+}
+
+function addText(){
+  const txt=document.getElementById('txtContent').value.trim();
+  if(!txt){toast('⚠️ Écris ton texte');return;}
+  textLayers.push({id:Date.now(),text:txt,font:curFont,size:document.getElementById('txtSize').value,color:document.getElementById('txtColor').value,pos:document.getElementById('txtPos').value,shadow:document.getElementById('txtShadow').value,anim:document.getElementById('txtAnim').value,start:parseFloat(document.getElementById('txtStart').value)||0,end:parseFloat(document.getElementById('txtEnd').value)||5});
+  renderTextList();updateSummary();toast('🖊️ Texte ajouté');
+}
+
+function renderTextList(){
+  const el=document.getElementById('txtList');
+  if(!textLayers.length){el.innerHTML='<p style="color:var(--muted);font-size:12px;">Aucun texte.</p>';return;}
+  el.innerHTML=textLayers.map((t,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="flex:1;font-size:13px;font-weight:700;font-family:${t.font}">${t.text}</span><span style="font-size:10px;color:var(--muted);font-family:monospace">${ft(t.start)}→${ft(t.end)}</span><button class="rbtn d" onclick="rmText(${i})">✕</button></div>`).join('');
+}
+
+function rmText(i){textLayers.splice(i,1);renderTextList();updateSummary();toast('🗑️ Supprimé');}
+
+function renderTextFrame(){
+  document.querySelectorAll('.dyn-txt').forEach(e=>e.remove());
+  const t=vid.currentTime;
+  textLayers.filter(l=>t>=l.start&&t<=l.end).forEach(l=>{
+    const d=document.createElement('div');d.className='dyn-txt';d.textContent=l.text;
+    const isCenter=l.pos==='center';
+    Object.assign(d.style,{position:'absolute',left:'50%',fontFamily:l.font,fontSize:l.size,color:l.color,textShadow:l.shadow,textAlign:'center',pointerEvents:'none',zIndex:12,whiteSpace:'nowrap'});
+    if(l.pos==='bottom'){d.style.bottom='55px';d.style.transform='translateX(-50%)';}
+    else if(l.pos==='top'){d.style.top='10px';d.style.transform='translateX(-50%)';}
+    else{d.style.top='50%';d.style.transform='translate(-50%,-50%)';}
+    if(l.anim&&l.anim!=='none'){d.style.animation=`${l.anim} .4s ease forwards`;}
+    screen.appendChild(d);
+  });
+}
+
+const FILTERS={none:'',foretnoire:'brightness(.7) contrast(1.4) saturate(.25) hue-rotate(95deg)',cinema:'brightness(.82) contrast(1.25) sepia(.35) saturate(.75)',neon:'brightness(.65) contrast(1.6) saturate(2.2) hue-rotate(240deg)',bw:'grayscale(1) contrast(1.25) brightness(.88)',vintage:'brightness(.78) contrast(1.15) sepia(.65) saturate(1.4)',dramatic:'brightness(.6) contrast(1.8) saturate(.5)',cold:'brightness(.85) contrast(1.2) saturate(.7) hue-rotate(200deg)',warm:'brightness(.9) contrast(1.15) saturate(1.5) hue-rotate(15deg)'};
+
+function setFilter(name,btn){curFilter=name;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');applyFilter();document.getElementById('ex-filter').textContent=name==='none'?'Aucun':name.toUpperCase();toast('🎨 '+name.toUpperCase());}
+
+function updAdj(){
+  bright=document.getElementById('brightSlider').value;
+  contrast=document.getElementById('contrastSlider').value;
+  sat=document.getElementById('satSlider').value;
+  vig=document.getElementById('vigSlider').value;
+  document.getElementById('brightVal').textContent=bright+'%';
+  document.getElementById('contrastVal').textContent=contrast+'%';
+  document.getElementById('satVal').textContent=sat+'%';
+  document.getElementById('vigVal').textContent=vig+'%';
+  applyFilter();
+}
+
+function applyFilter(){
+  let f=FILTERS[curFilter]||'';
+  f+=` brightness(${bright}%) contrast(${contrast}%) saturate(${sat}%)`;
+  vid.style.filter=f.trim();
+  let vEl=document.getElementById('vigOv');
+  if(!vEl){vEl=document.createElement('div');vEl.id='vigOv';vEl.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:5;';screen.appendChild(vEl);}
+  const v=vig/100;vEl.style.background=v>0?`radial-gradient(ellipse at center,transparent ${50-v*40}%,rgba(0,0,0,${v*.8}) 100%)`:'none';
+}
+
+function resetAdj(){['brightSlider','contrastSlider','satSlider'].forEach(id=>document.getElementById(id).value=100);document.getElementById('vigSlider').value=0;bright=contrast=sat=100;vig=0;document.getElementById('brightVal').textContent='100%';document.getElementById('contrastVal').textContent='100%';document.getElementById('satVal').textContent='100%';document.getElementById('vigVal').textContent='0%';applyFilter();toast('🔄 Réinitialisé');}
+
+function setZoom(v){zoom=parseInt(v);document.getElementById('zoomVal').textContent=v+'%';applyZoom();}
+function applyZoom(){vid.style.transform=`scale(${zoom/100}) translate(${px}px,${py}px)`;vid.style.transformOrigin='center center';}
+function pan(dx,dy){px+=dx;py+=dy;applyZoom();}
+function resetZoom(){zoom=100;px=0;py=0;document.getElementById('zoomSlider').value=100;document.getElementById('zoomVal').textContent='100%';vid.style.transform='';toast('🔄 Reset zoom');}
+function autoZoom(){zoom=120;px=0;py=-10;document.getElementById('zoomSlider').value=120;document.getElementById('zoomVal').textContent='120%';applyZoom();toast('🎯 Auto-zoom');}
+
+function setVol(v){document.getElementById('volVal').textContent=v+'%';vid.volume=Math.min(v/100,1);}
+function setNoise(v){document.getElementById('noiseVal').textContent=v+'%';}
+function pickMusic(el,type){document.querySelectorAll('.music-item').forEach(m=>m.classList.remove('active'));el.classList.add('active');selectedMusic=type;updateSummary();toast('🎵 '+type+' sélectionnée');}
+function loadMyMusic(inp){if(!inp.files[0])return;if(bgAudio)bgAudio.pause();bgAudio=new Audio(URL.createObjectURL(inp.files[0]));bgAudio.loop=true;bgAudio.volume=document.getElementById('mvolSlider').value/100;selectedMusic='custom';toast('📁 Musique chargée');}
+function setMVol(v){document.getElementById('mvolVal').textContent=v+'%';if(bgAudio)bgAudio.volume=v/100;}
+
+function setExport(fmt,el){exportFmt=fmt;document.querySelectorAll('.eopt').forEach(e=>e.classList.remove('active'));el.classList.add('active');const n={fb:'FACEBOOK',yt:'YOUTUBE',short:'YT SHORT',reel:'FB REEL'};document.getElementById('ex-fmt').textContent=n[fmt];}
+
+function doExport(){
+  if(!clips.length){toast('⚠️ Aucun clip');return;}
+  showModal('EXPORT EN COURS...','Préparation...',0);
+  let p=0;const iv=setInterval(()=>{p+=8;updateModal(p,'Traitement : '+p+'%...');if(p>=100){clearInterval(iv);const proj={version:'FV DILANO Studio v3',date:new Date().toISOString(),format:exportFmt,clips:clips.map(c=>({name:c.name,type:c.type,trimStart:c.trimStart,trimEnd:c.trimEnd})),filter:curFilter,cuts,textLayers,captions,music:selectedMusic};const blob=new Blob([JSON.stringify(proj,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='FV_DILANO_'+exportFmt+'_'+Date.now()+'.json';a.click();hideModal();toast('✅ Projet exporté !');}},150);
+}
+
+function saveProject(){localStorage.setItem('fvd_v3',JSON.stringify({clips:clips.length,filter:curFilter,textLayers,captions,cuts,ts:new Date().toLocaleString()}));toast('💾 Projet sauvegardé');}
+
+function updateSummary(){document.getElementById('ex-clips').textContent=clips.length;document.getElementById('ex-caps').textContent=captions.length;document.getElementById('ex-texts').textContent=textLayers.length;document.getElementById('ex-cuts').textContent=cuts.length;}
+
+function goTab(name,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById('panel-'+name).classList.add('active');if(name==='edit'&&curIdx>=0)refreshTrimUI();}
+
+function showModal(t,m,p){document.getElementById('modal').classList.add('show');document.getElementById('modalTitle').textContent=t;document.getElementById('modalMsg').textContent=m;document.getElementById('modalFill').style.width=p+'%';}
+function updateModal(p,m){document.getElementById('modalFill').style.width=p+'%';document.getElementById('modalMsg').textContent=m;}
+function hideModal(){document.getElementById('modal').classList.remove('show');}
+
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);}
+
+prevText();
+</script>
+</body>
+</html>
